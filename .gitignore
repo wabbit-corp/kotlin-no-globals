@@ -2,7 +2,11 @@
 Thumbs.db
 
 /.gradle
+**/.gradle/
 /build
+/compiler-plugin/build/
+/gradle-plugin/build/
+/library/build/
 /buildSrc/.gradle/
 /buildSrc/build/
 !gradle/wrapper/gradle-wrapper.jar
