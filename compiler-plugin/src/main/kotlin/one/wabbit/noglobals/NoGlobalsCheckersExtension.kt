@@ -8,18 +8,18 @@ import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
-import org.jetbrains.kotlin.fir.analysis.checkers.findClosestClassOrObject
 import org.jetbrains.kotlin.fir.analysis.checkers.isSupertypeOf
 import org.jetbrains.kotlin.fir.analysis.checkers.toClassLikeSymbol
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
-import org.jetbrains.kotlin.fir.analysis.checkers.context.findClosest
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirPropertyChecker
+import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirRegularClassChecker
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
 import org.jetbrains.kotlin.fir.declarations.FirAnonymousObject
 import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.declaredProperties
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
-import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.expressions.FirAnonymousObjectExpression
 import org.jetbrains.kotlin.fir.resolve.toSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
@@ -27,12 +27,30 @@ import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirEnumEntrySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
-import org.jetbrains.kotlin.name.ClassId
 
 internal class NoGlobalsCheckersExtension(
     session: FirSession,
     private val pluginConfiguration: NoGlobalsConfiguration,
 ) : FirAdditionalCheckersExtension(session) {
+    private val regularClassChecker =
+        object : FirRegularClassChecker(MppCheckerKind.Common) {
+            context(context: CheckerContext, reporter: DiagnosticReporter)
+            override fun check(declaration: FirRegularClass) {
+                val violation = declaration.globalMutableStateViolation(session, pluginConfiguration) ?: return
+                if (declaration.hasRequiresGlobalStateMarker(session)) {
+                    return
+                }
+                val source = declaration.source.realOrNull() ?: return
+                with(context) {
+                    reporter.reportOn(
+                        source,
+                        NoGlobalsErrors.GLOBAL_MUTABLE_STATE_REQUIRES_OPT_IN,
+                        violation.render(),
+                    )
+                }
+            }
+        }
+
     private val propertyChecker =
         object : FirPropertyChecker(MppCheckerKind.Common) {
             context(context: CheckerContext, reporter: DiagnosticReporter)
@@ -54,6 +72,7 @@ internal class NoGlobalsCheckersExtension(
 
     override val declarationCheckers: DeclarationCheckers =
         object : DeclarationCheckers() {
+            override val regularClassCheckers: Set<FirRegularClassChecker> = setOf(regularClassChecker)
             override val propertyCheckers: Set<FirPropertyChecker> = setOf(propertyChecker)
         }
 }
@@ -73,6 +92,8 @@ private data class GlobalMutableStateViolation(
                 }
             is GlobalMutableStateCategory.BlacklistedType ->
                 "${scope.valDescription()} of blacklisted mutable type ${category.typeName}"
+            is GlobalMutableStateCategory.SingletonCarrier ->
+                "object singleton of blacklisted mutable type ${category.typeName}"
             GlobalMutableStateCategory.AnonymousObjectHolder ->
                 "${scope.valDescription()} holding an anonymous object with mutable members"
         }
@@ -111,6 +132,10 @@ private sealed interface GlobalMutableStateCategory {
         val typeName: String,
     ) : GlobalMutableStateCategory
 
+    data class SingletonCarrier(
+        val typeName: String,
+    ) : GlobalMutableStateCategory
+
     data object AnonymousObjectHolder : GlobalMutableStateCategory
 }
 
@@ -129,8 +154,9 @@ private fun FirProperty.globalMutableStateViolation(
             isVar -> GlobalMutableStateCategory.Var(isLateinit = status.isLateInit)
             holdsAnonymousObjectWithMutableMembers(session, pluginConfiguration) ->
                 GlobalMutableStateCategory.AnonymousObjectHolder
+            isPureComputedVal() -> return null
             else ->
-                blacklistedTypeMatch(session, pluginConfiguration.blacklistedTypeClassIds)
+                blacklistedTypeMatch(session, pluginConfiguration.blacklistedTypes)
                     ?.let(GlobalMutableStateCategory::BlacklistedType)
                     ?: return null
         }
@@ -141,21 +167,37 @@ private fun FirProperty.globalMutableStateViolation(
     )
 }
 
+private fun FirRegularClass.globalMutableStateViolation(
+    session: FirSession,
+    pluginConfiguration: NoGlobalsConfiguration,
+): GlobalMutableStateViolation? {
+    if (classKind != ClassKind.OBJECT || symbol.classId.isLocal) {
+        return null
+    }
+
+    val blacklistedType =
+        symbol.blacklistedTypeMatch(session, pluginConfiguration.blacklistedTypes)
+            ?: return null
+
+    return GlobalMutableStateViolation(
+        scope = GlobalMutableStateScope.OBJECT_SINGLETON,
+        category = GlobalMutableStateCategory.SingletonCarrier(blacklistedType),
+    )
+}
+
 private fun FirProperty.blacklistedTypeMatch(
     session: FirSession,
-    blacklistedTypeClassIds: List<ClassId>,
+    blacklistedTypes: List<BlacklistedTypePattern>,
 ): String? {
     val propertyTypeSymbol = returnTypeRef.toClassLikeSymbol(session) as? FirClassSymbol<*> ?: return null
-    return blacklistedTypeClassIds.firstNotNullOfOrNull { blacklistedTypeClassId ->
-        val blacklistedTypeSymbol = blacklistedTypeClassId.toSymbol(session) as? FirClassSymbol<*>
-        when {
-            propertyTypeSymbol.classId == blacklistedTypeClassId -> blacklistedTypeClassId.asSingleFqName().asString()
-            blacklistedTypeSymbol != null && blacklistedTypeSymbol.isSupertypeOf(propertyTypeSymbol, session) ->
-                blacklistedTypeClassId.asSingleFqName().asString()
-            else -> null
-        }
-    }
+    return propertyTypeSymbol.blacklistedTypeMatch(session, blacklistedTypes)
 }
+
+private fun FirProperty.isPureComputedVal(): Boolean =
+    !isVar &&
+        initializer == null &&
+        delegate == null &&
+        getter != null
 
 private fun FirProperty.holdsAnonymousObjectWithMutableMembers(
     session: FirSession,
@@ -169,34 +211,20 @@ private fun FirAnonymousObject.containsMutableMembers(
     session: FirSession,
     pluginConfiguration: NoGlobalsConfiguration,
 ): Boolean {
-    var containsMutableMembers = false
-    processAllDeclarations(session) { member ->
-        val property = member as? FirPropertySymbol ?: return@processAllDeclarations
-        if (
-            property.isVar ||
-            property.blacklistedTypeMatch(session, pluginConfiguration.blacklistedTypeClassIds) != null ||
+    val declaredProperties = symbol.declaredProperties(session)
+    return declaredProperties.any { property ->
+        property.isVar ||
+            property.blacklistedTypeMatch(session, pluginConfiguration.blacklistedTypes) != null ||
             property.holdsAnonymousObjectWithMutableMembers(session, pluginConfiguration)
-        ) {
-            containsMutableMembers = true
-        }
     }
-    return containsMutableMembers
 }
 
 private fun FirPropertySymbol.blacklistedTypeMatch(
     session: FirSession,
-    blacklistedTypeClassIds: List<ClassId>,
+    blacklistedTypes: List<BlacklistedTypePattern>,
 ): String? {
     val propertyTypeSymbol = resolvedReturnTypeRef.toClassLikeSymbol(session) as? FirClassSymbol<*> ?: return null
-    return blacklistedTypeClassIds.firstNotNullOfOrNull { blacklistedTypeClassId ->
-        val blacklistedTypeSymbol = blacklistedTypeClassId.toSymbol(session) as? FirClassSymbol<*>
-        when {
-            propertyTypeSymbol.classId == blacklistedTypeClassId -> blacklistedTypeClassId.asSingleFqName().asString()
-            blacklistedTypeSymbol != null && blacklistedTypeSymbol.isSupertypeOf(propertyTypeSymbol, session) ->
-                blacklistedTypeClassId.asSingleFqName().asString()
-            else -> null
-        }
-    }
+    return propertyTypeSymbol.blacklistedTypeMatch(session, blacklistedTypes)
 }
 
 private fun FirPropertySymbol.holdsAnonymousObjectWithMutableMembers(
@@ -208,25 +236,56 @@ private fun FirPropertySymbol.holdsAnonymousObjectWithMutableMembers(
 }
 
 private fun CheckerContext.globalMutableStateScope(): GlobalMutableStateScope? {
-    if (findClosest<FirEnumEntrySymbol>() != null) {
-        return GlobalMutableStateScope.ENUM_ENTRY
+    // `containingDeclarations` is ordered outermost to innermost, so walk it backwards to classify
+    // from the nearest containing declaration instead of mixing independent closest-node queries.
+    val declarations = containingDeclarations.asReversed()
+    var index = 0
+    while (index < declarations.size) {
+        val declaration = declarations[index]
+        when (declaration) {
+            is FirAnonymousObjectSymbol -> {
+                val enumEntry = declarations.getOrNull(index + 1) as? FirEnumEntrySymbol
+                if (enumEntry?.initializerObjectSymbol == declaration) {
+                    index += 1
+                    continue
+                }
+                return null
+            }
+            is FirEnumEntrySymbol -> return GlobalMutableStateScope.ENUM_ENTRY
+            is FirRegularClassSymbol ->
+                return when (declaration.classKind) {
+                    ClassKind.OBJECT -> GlobalMutableStateScope.OBJECT_SINGLETON
+                    ClassKind.ENUM_CLASS -> GlobalMutableStateScope.ENUM_CLASS
+                    else -> null
+                }
+        }
+        index += 1
     }
 
-    return when (val nearestClassOrObject = findClosestClassOrObject()) {
-        null -> GlobalMutableStateScope.TOP_LEVEL
-        is FirAnonymousObjectSymbol -> null
-        is FirRegularClassSymbol ->
-            when (nearestClassOrObject.classKind) {
-                ClassKind.OBJECT -> GlobalMutableStateScope.OBJECT_SINGLETON
-                ClassKind.ENUM_CLASS -> GlobalMutableStateScope.ENUM_CLASS
-                else -> null
-            }
-    }
+    return GlobalMutableStateScope.TOP_LEVEL
 }
 
 private fun FirProperty.hasRequiresGlobalStateMarker(session: FirSession): Boolean =
-    symbol.resolvedAnnotationsWithClassIds.getAnnotationByClassId(REQUIRES_GLOBAL_STATE_CLASS_ID, session) != null ||
-        setter?.symbol?.resolvedAnnotationsWithClassIds?.getAnnotationByClassId(REQUIRES_GLOBAL_STATE_CLASS_ID, session) != null
+    symbol.resolvedAnnotationsWithClassIds.getAnnotationByClassId(REQUIRES_GLOBAL_STATE_CLASS_ID, session) != null
+
+private fun FirRegularClass.hasRequiresGlobalStateMarker(session: FirSession): Boolean =
+    symbol.resolvedAnnotationsWithClassIds.getAnnotationByClassId(REQUIRES_GLOBAL_STATE_CLASS_ID, session) != null
+
+private fun FirClassSymbol<*>.blacklistedTypeMatch(
+    session: FirSession,
+    blacklistedTypes: List<BlacklistedTypePattern>,
+): String? =
+    blacklistedTypes.firstNotNullOfOrNull { blacklistedType ->
+        blacklistedType.candidateClassIds.firstNotNullOfOrNull { candidateClassId ->
+            val blacklistedTypeSymbol = candidateClassId.toSymbol(session) as? FirClassSymbol<*>
+            when {
+                classId == candidateClassId -> blacklistedType.configuredName
+                blacklistedTypeSymbol != null && blacklistedTypeSymbol.isSupertypeOf(this, session) ->
+                    blacklistedType.configuredName
+                else -> null
+            }
+        }
+    }
 
 private fun AbstractKtSourceElement?.realOrNull(): AbstractKtSourceElement? {
     val source = this ?: return null

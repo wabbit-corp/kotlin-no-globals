@@ -7,7 +7,20 @@ import org.jetbrains.kotlin.compiler.plugin.CliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.name.Name
 
+/**
+ * Command-line option processor for the `kotlin-no-globals` compiler plugin.
+ *
+ * Supported options:
+ *
+ * - `enabled=true|false`
+ * - repeated `blacklistedType=<fq-name>`
+ *
+ * In typical Gradle builds these options are produced by the Gradle plugin automatically. This
+ * class exists so direct compiler integrations can configure the plugin through Kotlin's standard
+ * compiler-plugin option mechanism.
+ */
 class NoGlobalsCommandLineProcessor : CommandLineProcessor {
     private val enabledOption =
         CliOption(
@@ -56,6 +69,15 @@ class NoGlobalsCommandLineProcessor : CommandLineProcessor {
         }
 
     private fun parseBlacklistedType(value: String): String =
-        value.trim().takeIf(String::isNotEmpty)
+        value.trim()
+            .takeIf(String::isNotEmpty)
+            ?.also(::validateBlacklistedTypeName)
             ?: throw CliOptionProcessingException("Invalid value '$value' for option '$BLACKLISTED_TYPE_OPTION_NAME'")
+
+    private fun validateBlacklistedTypeName(typeName: String) {
+        val segments = typeName.split('.')
+        if (segments.any { segment -> segment.isEmpty() || !Name.isValidIdentifier(segment) }) {
+            throw CliOptionProcessingException("Invalid value '$typeName' for option '$BLACKLISTED_TYPE_OPTION_NAME'")
+        }
+    }
 }

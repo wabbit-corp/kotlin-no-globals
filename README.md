@@ -1,55 +1,80 @@
 # kotlin-no-globals
 
-`kotlin-no-globals` is a Kotlin compiler plugin that rejects global mutable state unless the
-declaration is explicitly marked with `@RequiresGlobalState`.
+`kotlin-no-globals` is a Kotlin K2 compiler-plugin stack for making global mutable state explicit.
 
-The current checker flags:
+Instead of silently allowing top-level mutation and singleton-backed mutable state, it requires
+those declarations to be marked with `@RequiresGlobalState`. Because that marker is a real Kotlin
+`@RequiresOptIn` annotation, every caller must then acknowledge the dependency explicitly with
+`@OptIn(RequiresGlobalState::class)`.
 
-- top-level `var`
-- `lateinit var`
-- mutable properties declared in `object` singletons, including companion objects
-- mutable properties declared in enum classes and enum entry bodies
-- top-level and singleton `val`s whose type is on the mutable-type blacklist
-- top-level and singleton `val`s holding anonymous objects with mutable members
+The stack combines:
 
-Once a property is annotated with `@RequiresGlobalState`, normal Kotlin opt-in rules apply and
-callers must acknowledge it with `@OptIn(RequiresGlobalState::class)`.
+- a small published annotation library with `@RequiresGlobalState`
+- a K2 FIR compiler plugin that detects global mutable state
+- a Gradle plugin that wires the compiler plugin and annotation dependency into Kotlin builds
 
-## Usage
+## Why This Exists
 
-Apply the Gradle plugin:
+Global mutable state is sometimes necessary, but it is rarely harmless.
+
+It tends to blur ownership, complicate testing, make initialization order matter, and create
+surprising transitive dependencies between otherwise ordinary APIs. Kotlin makes these patterns easy
+to write; `kotlin-no-globals` makes them visible and explicit.
+
+The goal is not to prove “all hidden mutability everywhere.” The goal is to put a hard compiler
+boundary around the most important and predictable forms of global mutable state, and to make the
+remaining exceptions obvious in source.
+
+## Status
+
+This repository is experimental and pre-1.0.
+
+- The compiler plugin is K2-only.
+- The current Kotlin compatibility line is driven by `supportedKotlinVersions` in [`gradle.properties`](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle.properties), currently `2.3.10`.
+- The Gradle and compiler-plugin builds target JDK 21.
+- The rule is intentionally declaration-shape and declared-type driven, not whole-program mutability analysis.
+
+## Modules
+
+| Module | Gradle project | Purpose |
+| --- | --- | --- |
+| [`library/`](/Users/wabbit/ws/datatron/kotlin-no-globals/library) | `:kotlin-no-globals` | Published annotation artifact containing `@RequiresGlobalState` |
+| [`compiler-plugin/`](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin) | `:kotlin-no-globals-plugin` | K2 FIR compiler plugin that reports diagnostics |
+| [`gradle-plugin/`](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin) | `:kotlin-no-globals-gradle-plugin` | Gradle integration for `id("one.wabbit.no-globals")` |
+
+## Quick Start
+
+Assuming normal Gradle usage:
 
 ```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+// build.gradle.kts
 plugins {
-    id("one.wabbit.no-globals")
+    kotlin("jvm") version "2.3.10"
+    id("one.wabbit.no-globals") version "<version>"
+}
+
+repositories {
+    mavenCentral()
 }
 ```
 
-Optional Gradle configuration:
+Then write code normally:
 
 ```kotlin
-noGlobals {
-    enabled.set(false)
-    blacklistedTypes.add("sample.MutableBox")
-}
+var counter: Int = 0
 ```
 
-Default blacklist entries include common mutable carriers such as:
-
-- `kotlin.collections.MutableList`
-- `kotlin.collections.MutableSet`
-- `kotlin.collections.MutableMap`
-- `java.util.concurrent.atomic.AtomicInteger`
-
-Add the marker annotation library:
-
-```kotlin
-dependencies {
-    implementation("one.wabbit:kotlin-no-globals:0.0.1")
-}
-```
-
-Annotate the declaration:
+The plugin rejects that declaration. To keep it, mark it explicitly:
 
 ```kotlin
 import one.wabbit.noglobals.RequiresGlobalState
@@ -58,7 +83,7 @@ import one.wabbit.noglobals.RequiresGlobalState
 var counter: Int = 0
 ```
 
-Opt in at the use site:
+And require callers to opt in:
 
 ```kotlin
 import one.wabbit.noglobals.RequiresGlobalState
@@ -67,9 +92,107 @@ import one.wabbit.noglobals.RequiresGlobalState
 fun readCounter(): Int = counter
 ```
 
+## What It Flags
+
+The current rule set is intentionally narrow and predictable.
+
+Rejected by default:
+
+- top-level `var`
+- `lateinit var`
+- `var` declared inside `object` singletons, including companion objects and `data object`
+- mutable properties declared in enum classes and enum entry bodies
+- top-level and singleton stored `val`s whose declared type is on the mutable-type blacklist
+- object singletons whose own type is on the mutable-type blacklist
+- top-level and singleton `val`s holding anonymous objects with mutable members
+
+Explicitly allowed:
+
+- instance properties on ordinary classes
+- local variables and local object expressions
+- pure computed `val`s with an explicit getter and no initializer or delegate
+- values whose public declared type is not blacklisted, even if the initializer is more concrete
+
+For the exact semantics and edge cases, see [docs/rules.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/rules.md).
+
+## Configuration
+
+Gradle DSL:
+
+```kotlin
+noGlobals {
+    enabled.set(true)
+    blacklistedTypes.add("sample.MutableBox")
+}
+```
+
+Available options:
+
+- `enabled`: turn checking on or off for the current module
+- `blacklistedTypes`: extend the default mutable-type blacklist with additional fully qualified type names
+
+Invalid blacklist entries fail fast during compiler option processing.
+
+## Default Blacklist
+
+The built-in blacklist covers common stored mutable carriers:
+
+- Kotlin mutable collection interfaces such as `MutableCollection`, `MutableList`, `MutableSet`, `MutableMap`
+- JDK atomics and atomic arrays
+- JDK concurrent accumulators, latches, barriers, semaphores, phasers, and locks
+- Kotlin stdlib atomics
+- `kotlinx.coroutines` mutable flows, `Mutex`, coroutine `Semaphore`, and `Channel`
+- `kotlinx.atomicfu` atomics
+- mutable builders such as `StringBuilder` and `StringBuffer`
+
+The checker also matches subtypes of those carriers.
+
+For the exact current list, see
+[NoGlobalsConfiguration.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsConfiguration.kt).
+
+## Artifact Coordinates
+
+Most consumers only need the annotation library and the Gradle plugin.
+
+| Module | Coordinates | Role |
+| --- | --- | --- |
+| Annotation library | `one.wabbit:kotlin-no-globals` | `@RequiresGlobalState` for source code |
+| Gradle plugin | `one.wabbit:kotlin-no-globals-gradle-plugin` | Gradle wiring for the compiler plugin |
+| Compiler plugin | `one.wabbit:kotlin-no-globals-plugin:<baseVersion>-kotlin-<kotlinVersion>` | Kotlin-line-specific K2 compiler plugin implementation |
+
+The Gradle plugin selects the matching compiler-plugin artifact automatically.
+
+## Kotlin Compatibility And Versioning
+
+The compiler plugin is versioned per Kotlin compiler line:
+
+- `one.wabbit:kotlin-no-globals-plugin:<baseVersion>-kotlin-<kotlinVersion>`
+
+That suffix matters. Compiler plugins are Kotlin-version-sensitive.
+
+The library and Gradle plugin use the base project version, while the compiler plugin appends the
+Kotlin line it was built for.
+
+## Direct Compiler Usage
+
+If you are not using Gradle, wire the compiler plugin directly:
+
+```text
+-Xplugin=/path/to/kotlin-no-globals-plugin.jar
+-P plugin:one.wabbit.no-globals:enabled=true|false
+-P plugin:one.wabbit.no-globals:blacklistedType=com.example.MutableBox
+```
+
+If source code uses `@RequiresGlobalState`, the annotation library still needs to be on the
+compilation classpath.
+
+For compiler-plugin-specific details, see
+[compiler-plugin/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/README.md).
+
 ## Local Composite Builds
 
-Before this project is published, local consumers need both forms of included build wiring:
+Before publication, or when testing locally across repositories, consumers need both forms of
+composite-build wiring:
 
 ```kotlin
 pluginManagement {
@@ -80,4 +203,35 @@ includeBuild("../kotlin-no-globals")
 ```
 
 The first resolves the Gradle plugin ID. The second allows Gradle to substitute the compiler
-plugin artifact on `kotlinCompilerPluginClasspath`.
+plugin and annotation artifacts.
+
+## Documentation Map
+
+- [docs/rules.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/rules.md): exact rule semantics, examples, and intentional non-goals
+- [docs/architecture.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/architecture.md): module relationships, configuration flow, and enforcement model
+- [docs/development.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/development.md): local build, testing, versioning, and contribution-oriented notes
+- [library/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/library/README.md): annotation artifact usage
+- [compiler-plugin/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/README.md): direct compiler integration and compiler-side behavior
+- [gradle-plugin/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin/README.md): Gradle DSL, installation, and local composite build notes
+- [PLAN.md](/Users/wabbit/ws/datatron/kotlin-no-globals/PLAN.md): review-driven implementation checklist and policy history
+
+## Build And Test
+
+Common commands from the repo root:
+
+```bash
+./gradlew build
+./gradlew :kotlin-no-globals-plugin:test
+./gradlew :kotlin-no-globals-gradle-plugin:test
+./gradlew :kotlin-no-globals:compileKotlinJvm
+```
+
+The Gradle plugin suite includes real TestKit builds, including native functional coverage, so it
+is slower than the pure compiler-plugin test suite.
+
+## Contributing And Licensing
+
+- License: [LICENSE.md](/Users/wabbit/ws/datatron/kotlin-no-globals/LICENSE.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](/Users/wabbit/ws/datatron/kotlin-no-globals/CODE_OF_CONDUCT.md)
+- CLA: [CLA.md](/Users/wabbit/ws/datatron/kotlin-no-globals/CLA.md)
+- Contributor privacy notice: [CONTRIBUTOR_PRIVACY.md](/Users/wabbit/ws/datatron/kotlin-no-globals/CONTRIBUTOR_PRIVACY.md)

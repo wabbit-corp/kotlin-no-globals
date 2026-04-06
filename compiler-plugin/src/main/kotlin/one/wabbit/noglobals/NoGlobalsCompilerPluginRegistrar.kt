@@ -10,6 +10,16 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 
 @OptIn(ExperimentalCompilerApi::class)
+/**
+ * Compiler-plugin registrar for `kotlin-no-globals`.
+ *
+ * This is the K2 entry point used by the Kotlin compiler to install the FIR-based global mutable
+ * state checkers. In normal builds you do not reference this class directly; the Gradle plugin
+ * resolves and wires the compiler plugin artifact automatically.
+ *
+ * The registrar is public because Kotlin compiler plugins are discovered through compiler SPI, not
+ * because it is intended as a general-purpose user API.
+ */
 class NoGlobalsCompilerPluginRegistrar : CompilerPluginRegistrar() {
     override val pluginId: String = NO_GLOBALS_PLUGIN_ID
     override val supportsK2: Boolean = true

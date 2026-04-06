@@ -88,6 +88,8 @@ dependencies {
 
     compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.29.0")
 }
 
 java {

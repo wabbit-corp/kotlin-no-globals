@@ -4,6 +4,8 @@ import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.dokka.gradle.engine.plugins.DokkaHtmlPluginParameters
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 repositories {
@@ -105,9 +107,28 @@ kotlin {
         }
     }
 
+    js {
+        browser {
+        }
+
+    }
+
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+        }
+
+    }
+
     iosArm64()
 
     iosSimulatorArm64()
+
+    linuxX64("linuxX64")
+
+    mingwX64("mingwX64")
+
+    macosX64("macosX64")
 
     macosArm64("hostNative")
 
@@ -116,6 +137,8 @@ kotlin {
         targets.getByName("iosArm64"),
 
         targets.getByName("iosSimulatorArm64"),
+
+        targets.getByName("macosX64"),
 
         targets.getByName("hostNative"),
 
