@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LicenseRef-Wabbit-Public-Test-License-1.1
+
 package one.wabbit.noglobals
 
 import java.nio.file.Files
@@ -38,6 +40,22 @@ class PluginArtifactResolutionTest {
     }
 
     @Test
+    fun `resolvePluginArtifact prefers jar matching configured kotlin version`() {
+        val libsDirectory = Files.createTempDirectory("plugin-artifact-resolution-test")
+        try {
+            libsDirectory.resolve("kotlin-no-globals-plugin-0.0.1-kotlin-2.3.10.jar").createFile()
+            val selectedJar = libsDirectory.resolve("kotlin-no-globals-plugin-0.0.1-kotlin-2.4.0-Beta1.jar").createFile()
+
+            assertEquals(
+                selectedJar,
+                resolvePluginArtifact(libsDirectory, kotlinVersion = "2.4.0-Beta1"),
+            )
+        } finally {
+            libsDirectory.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
     fun `locatePluginArtifact prefers explicit system property path`() {
         val repositoryRoot = Files.createTempDirectory("plugin-artifact-resolution-test")
         val explicitJar = repositoryRoot.resolve("custom/kotlin-no-globals-plugin.jar")
@@ -50,6 +68,7 @@ class PluginArtifactResolutionTest {
                 locatePluginArtifact(
                     explicitPluginJarPath = explicitJar.toString(),
                     repositoryRoot = repositoryRoot,
+                    kotlinVersion = null,
                 ),
             )
         } finally {
@@ -66,6 +85,7 @@ class PluginArtifactResolutionTest {
                 locatePluginArtifact(
                     explicitPluginJarPath = missingJar.toString(),
                     repositoryRoot = repositoryRoot,
+                    kotlinVersion = null,
                 )
             }
         } finally {

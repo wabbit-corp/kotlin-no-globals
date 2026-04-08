@@ -9,9 +9,9 @@ The repository has three runtime-relevant pieces:
 
 | Piece | Module | Responsibility |
 | --- | --- | --- |
-| Annotation library | [`library/`](/Users/wabbit/ws/datatron/kotlin-no-globals/library) | Publishes `@RequiresGlobalState` |
-| Compiler plugin | [`compiler-plugin/`](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin) | Detects global mutable state and reports diagnostics |
-| Gradle plugin | [`gradle-plugin/`](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin) | Wires the compiler plugin and annotation dependency into Gradle Kotlin compilations |
+| Annotation library | [`library/`](../library/) | Publishes `@RequiresGlobalState` |
+| Compiler plugin | [`compiler-plugin/`](../compiler-plugin/) | Detects global mutable state and reports diagnostics |
+| Gradle plugin | [`gradle-plugin/`](../gradle-plugin/) | Wires the compiler plugin and annotation dependency into Gradle Kotlin compilations |
 
 ## Core Enforcement Model
 

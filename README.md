@@ -30,7 +30,7 @@ remaining exceptions obvious in source.
 This repository is experimental and pre-1.0.
 
 - The compiler plugin is K2-only.
-- The current Kotlin compatibility line is driven by `supportedKotlinVersions` in [`gradle.properties`](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle.properties), currently `2.3.10`.
+- The current Kotlin compatibility matrix is driven by `supportedKotlinVersions` in [`gradle.properties`](./gradle.properties), currently `2.3.10` and `2.4.0-Beta1`.
 - The Gradle and compiler-plugin builds target JDK 21.
 - The rule is intentionally declaration-shape and declared-type driven, not whole-program mutability analysis.
 
@@ -38,9 +38,9 @@ This repository is experimental and pre-1.0.
 
 | Module | Gradle project | Purpose |
 | --- | --- | --- |
-| [`library/`](/Users/wabbit/ws/datatron/kotlin-no-globals/library) | `:kotlin-no-globals` | Published annotation artifact containing `@RequiresGlobalState` |
-| [`compiler-plugin/`](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin) | `:kotlin-no-globals-plugin` | K2 FIR compiler plugin that reports diagnostics |
-| [`gradle-plugin/`](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin) | `:kotlin-no-globals-gradle-plugin` | Gradle integration for `id("one.wabbit.no-globals")` |
+| [`library/`](./library/) | `:kotlin-no-globals` | Published annotation artifact containing `@RequiresGlobalState` |
+| [`compiler-plugin/`](./compiler-plugin/) | `:kotlin-no-globals-plugin` | K2 FIR compiler plugin that reports diagnostics |
+| [`gradle-plugin/`](./gradle-plugin/) | `:kotlin-no-globals-gradle-plugin` | Gradle integration for `id("one.wabbit.no-globals")` |
 
 ## Quick Start
 
@@ -113,7 +113,7 @@ Explicitly allowed:
 - pure computed `val`s with an explicit getter and no initializer or delegate
 - values whose public declared type is not blacklisted, even if the initializer is more concrete
 
-For the exact semantics and edge cases, see [docs/rules.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/rules.md).
+For the exact semantics and edge cases, see [docs/rules.md](./docs/rules.md).
 
 ## Configuration
 
@@ -148,7 +148,7 @@ The built-in blacklist covers common stored mutable carriers:
 The checker also matches subtypes of those carriers.
 
 For the exact current list, see
-[NoGlobalsConfiguration.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsConfiguration.kt).
+[`NoGlobalsConfiguration.kt`](./compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsConfiguration.kt).
 
 ## Artifact Coordinates
 
@@ -187,7 +187,7 @@ If source code uses `@RequiresGlobalState`, the annotation library still needs t
 compilation classpath.
 
 For compiler-plugin-specific details, see
-[compiler-plugin/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/README.md).
+[`compiler-plugin/README.md`](./compiler-plugin/README.md).
 
 ## Local Composite Builds
 
@@ -207,13 +207,14 @@ plugin and annotation artifacts.
 
 ## Documentation Map
 
-- [docs/rules.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/rules.md): exact rule semantics, examples, and intentional non-goals
-- [docs/architecture.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/architecture.md): module relationships, configuration flow, and enforcement model
-- [docs/development.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/development.md): local build, testing, versioning, and contribution-oriented notes
-- [library/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/library/README.md): annotation artifact usage
-- [compiler-plugin/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/README.md): direct compiler integration and compiler-side behavior
-- [gradle-plugin/README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin/README.md): Gradle DSL, installation, and local composite build notes
-- [PLAN.md](/Users/wabbit/ws/datatron/kotlin-no-globals/PLAN.md): review-driven implementation checklist and policy history
+- [CHANGELOG.md](./CHANGELOG.md): release-oriented history for public versions
+- [docs/rules.md](./docs/rules.md): exact rule semantics, examples, and intentional non-goals
+- [docs/architecture.md](./docs/architecture.md): module relationships, configuration flow, and enforcement model
+- [docs/development.md](./docs/development.md): local build, testing, versioning, and contribution-oriented notes
+- [library/README.md](./library/README.md): annotation artifact usage
+- [compiler-plugin/README.md](./compiler-plugin/README.md): direct compiler integration and compiler-side behavior
+- [gradle-plugin/README.md](./gradle-plugin/README.md): Gradle DSL, installation, and local composite build notes
+- [PLAN.md](./PLAN.md): review-driven implementation checklist and policy history
 
 ## Build And Test
 
@@ -231,7 +232,7 @@ is slower than the pure compiler-plugin test suite.
 
 ## Contributing And Licensing
 
-- License: [LICENSE.md](/Users/wabbit/ws/datatron/kotlin-no-globals/LICENSE.md)
-- Code of conduct: [CODE_OF_CONDUCT.md](/Users/wabbit/ws/datatron/kotlin-no-globals/CODE_OF_CONDUCT.md)
-- CLA: [CLA.md](/Users/wabbit/ws/datatron/kotlin-no-globals/CLA.md)
-- Contributor privacy notice: [CONTRIBUTOR_PRIVACY.md](/Users/wabbit/ws/datatron/kotlin-no-globals/CONTRIBUTOR_PRIVACY.md)
+- License: [LICENSE.md](./LICENSE.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- CLA: [CLA.md](./CLA.md)
+- Contributor privacy notice: [CONTRIBUTOR_PRIVACY.md](./CONTRIBUTOR_PRIVACY.md)

@@ -81,4 +81,4 @@ This module has real Gradle TestKit coverage for:
 - local composite-build substitution
 - native declaration-level opt-in behavior
 
-For repo-wide usage and semantics, see [../README.md](/Users/wabbit/ws/datatron/kotlin-no-globals/README.md).
+For repo-wide usage and semantics, see [../README.md](../README.md).

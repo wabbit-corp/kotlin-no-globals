@@ -74,4 +74,4 @@ This compiler plugin is:
 
 It does not currently attempt full hidden-mutability inference.
 
-For the exact semantics, see [../docs/rules.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/rules.md).
+For the exact semantics, see [../docs/rules.md](../docs/rules.md).

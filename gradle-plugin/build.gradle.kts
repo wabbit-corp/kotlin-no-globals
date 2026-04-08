@@ -70,7 +70,7 @@ mavenPublishing {
     signAllPublications()
     pom {
         name.set("kotlin-no-globals-gradle-plugin")
-        description.set("kotlin-no-globals-gradle-plugin")
+        description.set("Gradle plugin that wires kotlin-no-globals compiler enforcement and annotation dependencies into Kotlin builds.")
         url.set("https://github.com/wabbit-corp/kotlin-no-globals")
         licenses {
             license {
@@ -232,7 +232,7 @@ gradlePlugin {
             id = "one.wabbit.no-globals"
             implementationClass = "one.wabbit.noglobals.gradle.NoGlobalsGradlePlugin"
             displayName = "No Globals Gradle plugin"
-            description = "Gradle plugin for one.wabbit.no-globals."
+            description = "Gradle plugin that wires kotlin-no-globals compiler enforcement and annotation dependencies into Kotlin builds."
         }
     }
 }

@@ -55,4 +55,4 @@ dependencies {
 }
 ```
 
-For the full rule semantics, see [../docs/rules.md](/Users/wabbit/ws/datatron/kotlin-no-globals/docs/rules.md).
+For the full rule semantics, see [../docs/rules.md](../docs/rules.md).

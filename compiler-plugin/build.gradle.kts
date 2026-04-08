@@ -49,7 +49,7 @@ mavenPublishing {
     signAllPublications()
     pom {
         name.set("kotlin-no-globals-plugin")
-        description.set("kotlin-no-globals-plugin")
+        description.set("K2 compiler plugin that detects global mutable state and requires explicit @RequiresGlobalState opt-in markers.")
         url.set("https://github.com/wabbit-corp/kotlin-no-globals")
         licenses {
             license {
@@ -149,6 +149,8 @@ tasks.register("assertSnapshotVersion") {
 tasks {
     withType<Test> {
         jvmArgs("-ea")
+
+        systemProperty("kotlinVersion", kotlinVersion)
 
     }
     withType<JavaCompile> {

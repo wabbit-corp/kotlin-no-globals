@@ -187,3 +187,33 @@
 
 - [x] Run `./gradlew :compiler-plugin:test`.
 - [x] Run `./gradlew :gradle-plugin:test :kotlin-no-globals:compileKotlinJvm`.
+
+## Release Readiness
+
+### Immediate Release Blockers
+
+- [x] Keep the public docs GitHub-safe: no machine-local `/Users/wabbit/...` links in README or docs.
+- [x] Add and maintain a release-oriented [`CHANGELOG.md`](./CHANGELOG.md).
+- [x] Replace placeholder generated POM descriptions through [`root.clj`](../root.clj) and regenerate.
+- [x] Re-run SPDX header verification after the latest public-test-license updates.
+- [x] Prove the external consumer path from published coordinates, not just local composite builds.
+- [ ] Push to the public GitHub repository, wire workflows/secrets, and verify the hosted Dokka site.
+
+### Secondary Release Work
+
+- [x] Run full local verification for release prep:
+  - `./gradlew build`
+  - Dokka for all published modules
+  - `publishToMavenLocal`
+- [x] Keep the copied release-checklist audit under [`tmp/release-checklist/`](./tmp/release-checklist/) current.
+- [x] Confirm the Maven Central workflows still match the actual publish graph.
+- [ ] Confirm Pages/Dokka workflow builds a usable docs site for the published modules.
+- [x] Verify the compiler-plugin publication and external consumer path on every supported Kotlin line.
+
+### Recommended Execution Order
+
+- [x] Fix docs and changelog first.
+- [x] Regenerate from `root.clj` so metadata and legal files match the repo policy.
+- [x] Run SPDX and local build/publish verification.
+- [x] Run the external consumer smoke test.
+- [x] Update the audit with `PASS` / `FAIL` / `UNKNOWN` based on the final evidence.

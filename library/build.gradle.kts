@@ -42,7 +42,7 @@ mavenPublishing {
     signAllPublications()
     pom {
         name.set("kotlin-no-globals")
-        description.set("kotlin-no-globals")
+        description.set("Kotlin Multiplatform opt-in annotation library for making global mutable state explicit.")
         url.set("https://github.com/wabbit-corp/kotlin-no-globals")
         licenses {
             license {

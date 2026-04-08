@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LicenseRef-Wabbit-Public-Test-License-1.1
+
 package one.wabbit.noglobals
 
 import org.jetbrains.kotlin.cli.common.ExitCode
@@ -1130,12 +1132,14 @@ private fun pluginArtifact(): Path {
     return locatePluginArtifact(
         explicitPluginJarPath = System.getProperty("kotlin.no.globals.test.pluginJar"),
         repositoryRoot = repositoryRoot(),
+        kotlinVersion = System.getProperty("kotlinVersion"),
     )
 }
 
 internal fun locatePluginArtifact(
     explicitPluginJarPath: String?,
     repositoryRoot: Path,
+    kotlinVersion: String?,
 ): Path {
     explicitPluginJarPath
         ?.takeIf(String::isNotBlank)
@@ -1148,10 +1152,13 @@ internal fun locatePluginArtifact(
         }
 
     val libsDirectory = repositoryRoot.resolve("compiler-plugin/build/libs")
-    return resolvePluginArtifact(libsDirectory)
+    return resolvePluginArtifact(libsDirectory, kotlinVersion)
 }
 
-internal fun resolvePluginArtifact(libsDirectory: Path): Path {
+internal fun resolvePluginArtifact(
+    libsDirectory: Path,
+    kotlinVersion: String? = null,
+): Path {
     return Files.list(libsDirectory).use { paths ->
         val candidates =
             paths
@@ -1164,13 +1171,24 @@ internal fun resolvePluginArtifact(libsDirectory: Path): Path {
             }.toList()
             .sortedBy { path -> path.fileName.toString() }
 
-        when (candidates.size) {
-            1 -> candidates.single()
+        val versionMatchedCandidates =
+            kotlinVersion
+                ?.takeIf(String::isNotBlank)
+                ?.let { expectedKotlinVersion ->
+                    candidates.filter { path ->
+                        "-kotlin-$expectedKotlinVersion" in path.fileName.toString()
+                    }
+                } ?: candidates
+
+        val effectiveCandidates = if (versionMatchedCandidates.isNotEmpty()) versionMatchedCandidates else candidates
+
+        when (effectiveCandidates.size) {
+            1 -> effectiveCandidates.single()
             0 -> throw IllegalStateException("Could not locate built compiler plugin runtime jar in $libsDirectory")
             else ->
                 throw IllegalStateException(
                     "Expected exactly one compiler plugin runtime jar in $libsDirectory but found: " +
-                        candidates.joinToString { path -> path.fileName.toString() },
+                        effectiveCandidates.joinToString { path -> path.fileName.toString() },
                 )
         }
     }

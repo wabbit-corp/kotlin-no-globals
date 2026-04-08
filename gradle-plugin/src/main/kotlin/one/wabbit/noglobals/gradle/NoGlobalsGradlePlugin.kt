@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 package one.wabbit.noglobals.gradle
 
 import org.gradle.api.Project
@@ -87,7 +89,11 @@ class NoGlobalsGradlePlugin : KotlinCompilerPluginSupportPlugin {
         SubpluginArtifact(
             groupId = NO_GLOBALS_COMPILER_PLUGIN_GROUP,
             artifactId = NO_GLOBALS_COMPILER_PLUGIN_ARTIFACT,
-            version = NO_GLOBALS_GRADLE_PLUGIN_VERSION,
+            version =
+                compilerPluginArtifactVersion(
+                    baseVersion = NO_GLOBALS_GRADLE_PLUGIN_VERSION,
+                    kotlinVersion = currentKotlinGradlePluginVersion(),
+                ),
         )
 }
 

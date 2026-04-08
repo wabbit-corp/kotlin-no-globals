@@ -8,16 +8,16 @@ This repo contains the full stack for `kotlin-no-globals`:
 
 ## Repo Layout
 
-- [library](/Users/wabbit/ws/datatron/kotlin-no-globals/library)
+- [library](../library/)
   The `one.wabbit:kotlin-no-globals` artifact containing `@RequiresGlobalState`.
 
-- [compiler-plugin](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin)
+- [compiler-plugin](../compiler-plugin/)
   The K2 compiler plugin. Most rule changes land here.
 
-- [gradle-plugin](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin)
+- [gradle-plugin](../gradle-plugin/)
   The Gradle adapter for `id("one.wabbit.no-globals")`.
 
-- [PLAN.md](/Users/wabbit/ws/datatron/kotlin-no-globals/PLAN.md)
+- [PLAN.md](../PLAN.md)
   Historical checklist of review-driven work that shaped the current implementation.
 
 ## Where To Change What
@@ -26,9 +26,9 @@ This repo contains the full stack for `kotlin-no-globals`:
 
 Start in:
 
-- [NoGlobalsCheckersExtension.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsCheckersExtension.kt)
-- [NoGlobalsConfiguration.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsConfiguration.kt)
-- [CompilerIntegrationTest.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/compiler-plugin/src/test/kotlin/one/wabbit/noglobals/CompilerIntegrationTest.kt)
+- [NoGlobalsCheckersExtension.kt](../compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsCheckersExtension.kt)
+- [NoGlobalsConfiguration.kt](../compiler-plugin/src/main/kotlin/one/wabbit/noglobals/NoGlobalsConfiguration.kt)
+- [CompilerIntegrationTest.kt](../compiler-plugin/src/test/kotlin/one/wabbit/noglobals/CompilerIntegrationTest.kt)
 
 The tests compile real Kotlin snippets through the actual compiler pipeline. That is the main
 confidence source for this repo.
@@ -37,9 +37,9 @@ confidence source for this repo.
 
 Start in:
 
-- [NoGlobalsGradlePlugin.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin/src/main/kotlin/one/wabbit/noglobals/gradle/NoGlobalsGradlePlugin.kt)
-- [NoGlobalsGradlePluginTest.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin/src/test/kotlin/one/wabbit/noglobals/gradle/NoGlobalsGradlePluginTest.kt)
-- [NoGlobalsGradlePluginFunctionalTest.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/gradle-plugin/src/test/kotlin/one/wabbit/noglobals/gradle/NoGlobalsGradlePluginFunctionalTest.kt)
+- [NoGlobalsGradlePlugin.kt](../gradle-plugin/src/main/kotlin/one/wabbit/noglobals/gradle/NoGlobalsGradlePlugin.kt)
+- [NoGlobalsGradlePluginTest.kt](../gradle-plugin/src/test/kotlin/one/wabbit/noglobals/gradle/NoGlobalsGradlePluginTest.kt)
+- [NoGlobalsGradlePluginFunctionalTest.kt](../gradle-plugin/src/test/kotlin/one/wabbit/noglobals/gradle/NoGlobalsGradlePluginFunctionalTest.kt)
 
 Use the functional tests when changing:
 
@@ -52,7 +52,7 @@ Use the functional tests when changing:
 
 Start in:
 
-- [RequiresGlobalState.kt](/Users/wabbit/ws/datatron/kotlin-no-globals/library/src/commonMain/kotlin/one/wabbit/noglobals/RequiresGlobalState.kt)
+- [RequiresGlobalState.kt](../library/src/commonMain/kotlin/one/wabbit/noglobals/RequiresGlobalState.kt)
 
 Be careful: changing targets or retention has direct consequences for both the checker and caller
 opt-in behavior.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LicenseRef-Wabbit-Public-Test-License-1.1
+
 package one.wabbit.noglobals.gradle
 
 import org.gradle.testfixtures.ProjectBuilder
@@ -105,5 +107,21 @@ class NoGlobalsGradlePluginTest {
             }
 
         assertEquals(1, dependencyCount)
+    }
+
+    @Test
+    fun `compiler plugin artifact version includes kotlin line`() {
+        assertEquals(
+            "0.0.1-kotlin-2.3.10",
+            compilerPluginArtifactVersion(baseVersion = "0.0.1", kotlinVersion = "2.3.10"),
+        )
+    }
+
+    @Test
+    fun `compiler plugin snapshot artifact version keeps snapshot suffix`() {
+        assertEquals(
+            "0.0.1-kotlin-2.3.10+dev-SNAPSHOT",
+            compilerPluginArtifactVersion(baseVersion = "0.0.1+dev-SNAPSHOT", kotlinVersion = "2.3.10"),
+        )
     }
 }

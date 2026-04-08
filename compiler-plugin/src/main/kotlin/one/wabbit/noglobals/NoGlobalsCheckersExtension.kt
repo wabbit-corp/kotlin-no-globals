@@ -1,7 +1,13 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+@file:OptIn(org.jetbrains.kotlin.fir.symbols.SymbolInternals::class)
+
 package one.wabbit.noglobals
 
 import org.jetbrains.kotlin.AbstractKtSourceElement
 import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.KtLightSourceElement
+import org.jetbrains.kotlin.KtPsiSourceElement
 import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
@@ -22,11 +28,19 @@ import org.jetbrains.kotlin.fir.declarations.declaredProperties
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
 import org.jetbrains.kotlin.fir.expressions.FirAnonymousObjectExpression
 import org.jetbrains.kotlin.fir.resolve.toSymbol
+import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.FirAnonymousObjectSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirEnumEntrySymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
+import org.jetbrains.kotlin.psi.KtAnonymousInitializer
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtEnumEntry
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
 internal class NoGlobalsCheckersExtension(
     session: FirSession,
@@ -144,11 +158,20 @@ private fun FirProperty.globalMutableStateViolation(
     pluginConfiguration: NoGlobalsConfiguration,
     checkerContext: CheckerContext,
 ): GlobalMutableStateViolation? {
-    if (symbol.isLocal) {
+    val sourceScope = source.realOrNull().globalMutableStateScopeFromPsi() ?: source.globalMutableStateScopeFromPsi()
+    val scope = sourceScope ?: checkerContext.globalMutableStateScope()
+    if (symbol.isLocal && scope == null) {
         return null
     }
+    scope ?: return null
+    return globalMutableStateViolation(session, pluginConfiguration, scope)
+}
 
-    val scope = checkerContext.globalMutableStateScope() ?: return null
+private fun FirProperty.globalMutableStateViolation(
+    session: FirSession,
+    pluginConfiguration: NoGlobalsConfiguration,
+    scope: GlobalMutableStateScope,
+): GlobalMutableStateViolation? {
     val category =
         when {
             isVar -> GlobalMutableStateCategory.Var(isLateinit = status.isLateInit)
@@ -243,23 +266,80 @@ private fun CheckerContext.globalMutableStateScope(): GlobalMutableStateScope? {
     while (index < declarations.size) {
         val declaration = declarations[index]
         when (declaration) {
+            is FirFunctionSymbol<*> -> return null
+            is FirPropertySymbol -> return null
             is FirAnonymousObjectSymbol -> {
-                val enumEntry = declarations.getOrNull(index + 1) as? FirEnumEntrySymbol
-                if (enumEntry?.initializerObjectSymbol == declaration) {
-                    index += 1
-                    continue
+                var ancestorIndex = index + 1
+                while (ancestorIndex < declarations.size) {
+                    when (val ancestor = declarations[ancestorIndex]) {
+                        is FirFunctionSymbol<*> -> return null
+                        is FirPropertySymbol -> return null
+                        is FirEnumEntrySymbol -> return GlobalMutableStateScope.ENUM_ENTRY
+                        is FirRegularClassSymbol ->
+                            return when (ancestor.classKind) {
+                                ClassKind.ENUM_ENTRY, ClassKind.ENUM_CLASS -> GlobalMutableStateScope.ENUM_ENTRY
+                                else -> null
+                            }
+                    }
+                    ancestorIndex += 1
                 }
                 return null
             }
             is FirEnumEntrySymbol -> return GlobalMutableStateScope.ENUM_ENTRY
             is FirRegularClassSymbol ->
-                return when (declaration.classKind) {
-                    ClassKind.OBJECT -> GlobalMutableStateScope.OBJECT_SINGLETON
-                    ClassKind.ENUM_CLASS -> GlobalMutableStateScope.ENUM_CLASS
-                    else -> null
-                }
+                return declaration.globalMutableStateScopeFromSource()
         }
         index += 1
+    }
+
+    return GlobalMutableStateScope.TOP_LEVEL
+}
+
+private fun FirRegularClassSymbol.globalMutableStateScopeFromSource(): GlobalMutableStateScope? {
+    val sourceScope = fir.source.realOrNull().globalMutableStateScopeFromPsi() ?: fir.source.globalMutableStateScopeFromPsi()
+    return when {
+        classKind == ClassKind.OBJECT -> GlobalMutableStateScope.OBJECT_SINGLETON
+        classKind == ClassKind.ENUM_CLASS -> GlobalMutableStateScope.ENUM_CLASS
+        classKind == ClassKind.ENUM_ENTRY || sourceScope == GlobalMutableStateScope.ENUM_ENTRY ->
+            GlobalMutableStateScope.ENUM_ENTRY
+        else -> null
+    }
+}
+
+private fun AbstractKtSourceElement?.globalMutableStateScopeFromPsi(): GlobalMutableStateScope? {
+    val sourceElement = this ?: return null
+    val psiSource =
+        when (sourceElement) {
+            is KtPsiSourceElement -> sourceElement
+            is KtLightSourceElement -> sourceElement.unwrapToKtPsiSourceElement()
+            else -> null
+        } ?: return null
+
+    var current = psiSource.psi
+    while (current != null) {
+        when (current) {
+            is KtNamedFunction,
+            is KtPropertyAccessor,
+            is KtAnonymousInitializer,
+            -> return null
+
+            is KtEnumEntry -> return GlobalMutableStateScope.ENUM_ENTRY
+
+            is KtObjectDeclaration ->
+                return if (current.isObjectLiteral()) {
+                    null
+                } else {
+                    GlobalMutableStateScope.OBJECT_SINGLETON
+                }
+
+            is KtClass ->
+                when {
+                    current.isEnum() -> return GlobalMutableStateScope.ENUM_CLASS
+                    current.parent is KtEnumEntry -> current = current.parent
+                    else -> return null
+                }
+        }
+        current = current.parent
     }
 
     return GlobalMutableStateScope.TOP_LEVEL
