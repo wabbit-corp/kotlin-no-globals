@@ -40,6 +40,7 @@ This repository is experimental and pre-1.0.
 | --- | --- | --- |
 | [`library/`](./library/) | `:kotlin-no-globals` | Published annotation artifact containing `@RequiresGlobalState` |
 | [`compiler-plugin/`](./compiler-plugin/) | `:kotlin-no-globals-plugin` | K2 FIR compiler plugin that reports diagnostics |
+| [`ij-plugin/`](./ij-plugin/) | `:kotlin-no-globals-ij-plugin` | IntelliJ IDEA helper plugin for external compiler-plugin loading |
 | [`gradle-plugin/`](./gradle-plugin/) | `:kotlin-no-globals-gradle-plugin` | Gradle integration for `id("one.wabbit.no-globals")` |
 
 ## Quick Start
@@ -213,6 +214,7 @@ plugin and annotation artifacts.
 - [docs/development.md](./docs/development.md): local build, testing, versioning, and contribution-oriented notes
 - [library/README.md](./library/README.md): annotation artifact usage
 - [compiler-plugin/README.md](./compiler-plugin/README.md): direct compiler integration and compiler-side behavior
+- [ij-plugin/README.md](./ij-plugin/README.md): IntelliJ IDEA integration for external compiler-plugin loading
 - [gradle-plugin/README.md](./gradle-plugin/README.md): Gradle DSL, installation, and local composite build notes
 - [PLAN.md](./PLAN.md): review-driven implementation checklist and policy history
 

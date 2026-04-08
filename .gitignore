@@ -6,6 +6,7 @@ Thumbs.db
 /build
 /compiler-plugin/build/
 /gradle-plugin/build/
+/ij-plugin/build/
 /library/build/
 /buildSrc/.gradle/
 /buildSrc/build/

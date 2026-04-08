@@ -33,15 +33,16 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build Dokka documentation
-        run: ./gradlew --no-daemon :kotlin-no-globals:dokkaGeneratePublicationHtml :kotlin-no-globals-plugin:dokkaGeneratePublicationHtml :kotlin-no-globals-gradle-plugin:dokkaGeneratePublicationHtml
+        run: ./gradlew --no-daemon :kotlin-no-globals:dokkaGeneratePublicationHtml :kotlin-no-globals-plugin:dokkaGeneratePublicationHtml :kotlin-no-globals-ij-plugin:dokkaGeneratePublicationHtml :kotlin-no-globals-gradle-plugin:dokkaGeneratePublicationHtml
 
       - name: Assemble Pages site
         run: |
           SITE_DIR="$RUNNER_TEMP/pages-site"
-          mkdir -p "$SITE_DIR/kotlin-no-globals" "$SITE_DIR/kotlin-no-globals-plugin" "$SITE_DIR/kotlin-no-globals-gradle-plugin"
+          mkdir -p "$SITE_DIR/kotlin-no-globals" "$SITE_DIR/kotlin-no-globals-plugin" "$SITE_DIR/kotlin-no-globals-ij-plugin" "$SITE_DIR/kotlin-no-globals-gradle-plugin"
 
           cp -R library/build/dokka/html/. "$SITE_DIR/kotlin-no-globals/"
           cp -R compiler-plugin/build/dokka/html/. "$SITE_DIR/kotlin-no-globals-plugin/"
+          cp -R ij-plugin/build/dokka/html/. "$SITE_DIR/kotlin-no-globals-ij-plugin/"
           cp -R gradle-plugin/build/dokka/html/. "$SITE_DIR/kotlin-no-globals-gradle-plugin/"
 
           cat > "$SITE_DIR/index.html" <<'HTML'
@@ -95,6 +96,7 @@ jobs:
               <ul>
                 <li><a href="./kotlin-no-globals/">kotlin-no-globals</a>: source annotation library</li>
                 <li><a href="./kotlin-no-globals-plugin/">kotlin-no-globals-plugin</a>: compiler plugin</li>
+                <li><a href="./kotlin-no-globals-ij-plugin/">kotlin-no-globals-ij-plugin</a>: IntelliJ IDEA support plugin</li>
                 <li><a href="./kotlin-no-globals-gradle-plugin/">kotlin-no-globals-gradle-plugin</a>: Gradle integration</li>
                 <li><a href="https://github.com/wabbit-corp/kotlin-no-globals">Repository</a></li>
               </ul>

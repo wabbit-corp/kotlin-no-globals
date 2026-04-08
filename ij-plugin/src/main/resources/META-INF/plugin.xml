@@ -1,0 +1,24 @@
+<idea-plugin>
+    <id>one.wabbit.noglobals.ide</id>
+    <name>No-Globals IDE Support</name>
+    <version>0.0.1</version>
+    <vendor email="wabbit@wabbit.one" url="https://wabbit.one">Wabbit Consulting Corporation</vendor>
+    <description>Enables IntelliJ-side support for one.wabbit kotlin-no-globals projects by allowing the Kotlin IDE plugin to load the external compiler plugin registrar from imported compiler arguments.</description>
+    <change-notes>Initial release.</change-notes>
+    <extensions defaultExtensionNs="com.intellij">
+        <backgroundPostStartupActivity implementation="one.wabbit.noglobals.idea.NoGlobalsIdeSupportActivity" />
+        <notificationGroup id="NoGlobalsIdeSupport" displayType="BALLOON" />
+    </extensions>
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true" />
+    </extensions>
+    <actions>
+        <action id="one.wabbit.noglobals.idea.RefreshNoGlobalsIdeSupportAction" class="one.wabbit.noglobals.idea.RefreshNoGlobalsIdeSupportAction" text="Refresh No-Globals IDE Support" description="Re-scan Kotlin compiler arguments and enable no-globals IDE support for this project session.">
+            <add-to-group group-id="ToolsMenu" anchor="last" />
+        </action>
+    </actions>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.gradle</depends>
+    <depends>org.jetbrains.kotlin</depends>
+    <idea-version since-build="253" />
+</idea-plugin>
