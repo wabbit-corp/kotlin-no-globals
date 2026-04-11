@@ -32,8 +32,16 @@ jobs:
           java-version: "21"
           cache: gradle
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
       - name: Ensure Gradle wrapper is executable
         run: chmod +x ./gradlew
+
+      - name: Install markdown docs tooling
+        run: python3 -m pip install --disable-pip-version-check mkdocs==1.6.1
 
       - name: Build Dokka documentation
         run: ./gradlew --no-daemon :kotlin-no-globals:dokkaGeneratePublicationHtml :kotlin-no-globals-plugin:dokkaGeneratePublicationHtml :kotlin-no-globals-ij-plugin:dokkaGeneratePublicationHtml :kotlin-no-globals-gradle-plugin:dokkaGeneratePublicationHtml
@@ -47,6 +55,7 @@ jobs:
           cp -R compiler-plugin/build/dokka/html/. "$SITE_DIR/kotlin-no-globals-plugin/"
           cp -R ij-plugin/build/dokka/html/. "$SITE_DIR/kotlin-no-globals-ij-plugin/"
           cp -R gradle-plugin/build/dokka/html/. "$SITE_DIR/kotlin-no-globals-gradle-plugin/"
+          python3 scripts/build_pages_markdown_site.py --output-dir "$SITE_DIR/docs"
 
           cat > "$SITE_DIR/index.html" <<'HTML'
           <!doctype html>
@@ -101,6 +110,7 @@ jobs:
                 <li><a href="./kotlin-no-globals-plugin/">kotlin-no-globals-plugin</a>: compiler plugin</li>
                 <li><a href="./kotlin-no-globals-ij-plugin/">kotlin-no-globals-ij-plugin</a>: IntelliJ IDEA support plugin</li>
                 <li><a href="./kotlin-no-globals-gradle-plugin/">kotlin-no-globals-gradle-plugin</a>: Gradle integration</li>
+                <li><a href="./docs/">Guides</a>: prose guides, reference docs, and module notes</li>
                 <li><a href="https://github.com/wabbit-corp/kotlin-no-globals">Repository</a></li>
               </ul>
             </main>
