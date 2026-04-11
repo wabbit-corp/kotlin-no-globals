@@ -2,12 +2,12 @@
 
 This document describes what `kotlin-no-globals` is trying to enforce today.
 
-The short version:
+At a glance:
 
 - global `var` is bad by default
 - stored global mutable carriers are bad by default
 - explicit opt-in is the escape hatch
-- the rule is intentionally based on declaration shape and declared types, not whole-program alias analysis
+- the rule is based on declaration shape and declared types, not whole-program alias analysis
 
 ## Core Model
 
@@ -16,7 +16,7 @@ The plugin uses `@RequiresGlobalState` as both:
 - the marker that blesses a global mutable declaration
 - the opt-in requirement that callers must acknowledge
 
-That means the declaration site and use site stay aligned:
+That keeps the declaration site and use site aligned:
 
 ```kotlin
 @RequiresGlobalState
@@ -165,7 +165,7 @@ Allowed:
 val users: List<String> = mutableListOf()
 ```
 
-This is a deliberate design choice. The plugin follows the declared type, not the initializer
+This is a design choice. The plugin follows the declared type, not the initializer
 type. It does not attempt to prove hidden mutability behind an immutable-looking API.
 
 ## Annotation Rules
@@ -219,7 +219,7 @@ The checker also matches subtypes of blacklisted types.
 
 The plugin does **not** currently try to catch every possible shape of hidden mutability.
 
-Examples intentionally out of scope:
+Examples that stay out of scope:
 
 - upcasted initializer tricks such as `List = mutableListOf()`
 - anonymous objects hidden behind wrapper expressions like `run { object { ... } }`

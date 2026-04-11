@@ -76,6 +76,17 @@ Useful combinations:
 The Gradle plugin tests include real TestKit builds. Some functional native checks are slower than
 the pure compiler-plugin suite.
 
+## Documentation
+
+The docs are organized around user intent rather than module layout:
+
+- [rules.md](./rules.md) explains the rule model and current boundaries
+- [api-reference.md](./api-reference.md) points to generated API docs and public symbols
+- [troubleshooting.md](./troubleshooting.md) maps diagnostics to fixes
+- [migration.md](./migration.md) records versioning and upgrade expectations
+
+When adding examples to the README, keep them copy-pasteable and add compiler-plugin coverage if the sample represents expected source behavior.
+
 ## Local Consumer Testing
 
 Before publication, downstream repos should use a composite build:
@@ -97,7 +108,7 @@ This distinction is covered by functional tests and is easy to forget.
 
 ## Versioning Notes
 
-The published artifacts are intentionally not all versioned the same way:
+The published artifacts are not all versioned the same way:
 
 - library artifact: base project version
 - Gradle plugin artifact: base project version

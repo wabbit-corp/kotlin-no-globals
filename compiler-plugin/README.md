@@ -2,6 +2,12 @@
 
 This module contains the K2 FIR compiler plugin implementation for `kotlin-no-globals`.
 
+Use this module when you need direct compiler wiring or want to inspect the compiler-side enforcement model. For normal build setup, start with the [Gradle plugin README](../gradle-plugin/README.md), the [rule guide](../docs/rules.md), and the [API reference](../docs/api-reference.md).
+
+## Status
+
+This module is pre-1.0 and publishes Kotlin-line-specific variants for the repository's supported Kotlin matrix.
+
 It is responsible for:
 
 - detecting global `var`
@@ -25,7 +31,7 @@ one.wabbit:kotlin-no-globals-plugin:0.0.1-kotlin-2.3.10
 
 Use the variant whose Kotlin suffix matches the compiler you are running.
 
-## Direct Compiler Usage
+## Installation And Direct Compiler Usage
 
 If you are not using the Gradle plugin, pass the compiler plugin explicitly:
 
@@ -37,6 +43,8 @@ If you are not using the Gradle plugin, pass the compiler plugin explicitly:
 
 If your source code uses `@RequiresGlobalState`, the annotation library still needs to be present
 on the compilation classpath.
+
+To verify the plugin is active, compile a source file containing a top-level `var` without `@RequiresGlobalState`. The compilation should fail with the plugin's global-state diagnostic.
 
 ## Compiler Options
 
@@ -58,7 +66,7 @@ The compiler plugin currently uses:
 - a property checker for property-shaped global mutable state
 - a regular-class checker for singleton objects that are themselves mutable carriers
 
-The enforcement model is intentionally simple:
+The enforcement model is simple:
 
 - find a declaration that matches the rule
 - require `@RequiresGlobalState` on that declaration
@@ -74,4 +82,4 @@ This compiler plugin is:
 
 It does not currently attempt full hidden-mutability inference.
 
-For the exact semantics, see [../docs/rules.md](../docs/rules.md).
+Release notes live in [`../CHANGELOG.md`](../CHANGELOG.md). For diagnostics and setup issues, start with [`../docs/troubleshooting.md`](../docs/troubleshooting.md) and the contribution/support guidance in the [root README](../README.md).

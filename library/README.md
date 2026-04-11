@@ -6,9 +6,15 @@ It contains the public marker annotation:
 
 - `one.wabbit.noglobals.RequiresGlobalState`
 
+Start with the [root README](../README.md) for the overview, [rule guide](../docs/rules.md) for semantics, and [API reference](../docs/api-reference.md) for the public surface.
+
+## Status
+
+This module is pre-1.0 and follows the repository Kotlin compatibility matrix in [`../gradle.properties`](../gradle.properties).
+
 ## What It Is For
 
-`@RequiresGlobalState` is used to mark declarations that intentionally rely on global mutable state.
+`@RequiresGlobalState` is used to mark declarations that rely on global mutable state by design.
 
 It is also a real Kotlin `@RequiresOptIn` marker, so callers must acknowledge the dependency with:
 
@@ -26,6 +32,23 @@ var counter: Int = 0
 ```
 
 The compiler plugin requires this annotation for declarations it considers global mutable state.
+
+## Installation
+
+Most users get this module automatically by applying the Gradle plugin, but manual setup is still straightforward:
+
+```kotlin
+plugins {
+    kotlin("jvm") version "2.3.10"
+    id("one.wabbit.no-globals") version "0.0.1"
+}
+
+dependencies {
+    implementation("one.wabbit:kotlin-no-globals:0.0.1")
+}
+```
+
+Run `./gradlew compileKotlin` after adding the dependency to confirm the annotation resolves in source.
 
 ## Targets
 
@@ -51,8 +74,8 @@ plugin, add:
 
 ```kotlin
 dependencies {
-    implementation("one.wabbit:kotlin-no-globals:<version>")
+    implementation("one.wabbit:kotlin-no-globals:0.0.1")
 }
 ```
 
-For the full rule semantics, see [../docs/rules.md](../docs/rules.md).
+Release notes live in [`../CHANGELOG.md`](../CHANGELOG.md). If you hit setup or diagnostic issues, start with [`../docs/troubleshooting.md`](../docs/troubleshooting.md) and the contribution/support guidance in the [root README](../README.md).

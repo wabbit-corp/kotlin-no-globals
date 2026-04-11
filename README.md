@@ -2,6 +2,89 @@
 
 `kotlin-no-globals` is a Kotlin K2 compiler-plugin stack for making global mutable state explicit.
 
+## Quick Start
+
+For a JVM project, the smallest useful setup is:
+
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = "no-globals-quickstart"
+```
+
+```kotlin
+// build.gradle.kts
+plugins {
+    kotlin("jvm") version "2.3.10"
+    application
+    id("one.wabbit.no-globals") version "0.0.1"
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+application {
+    mainClass = "sample.MainKt"
+}
+
+noGlobals {
+    enabled.set(true)
+}
+```
+
+Then add `src/main/kotlin/sample/Main.kt`:
+
+<!-- quickstart-source:start -->
+```kotlin
+package sample
+
+import one.wabbit.noglobals.RequiresGlobalState
+
+@RequiresGlobalState
+var counter: Int = 0
+
+@RequiresGlobalState
+@OptIn(RequiresGlobalState::class)
+fun nextCounter(): Int {
+    counter += 1
+    return counter
+}
+
+@OptIn(RequiresGlobalState::class)
+fun main() {
+    println(nextCounter())
+}
+```
+<!-- quickstart-source:end -->
+
+Run it:
+
+```bash
+./gradlew run
+```
+
+Expected output:
+
+```text
+1
+```
+
+Remove `@RequiresGlobalState` from `counter` to see the compiler reject the global `var`. Remove the `@OptIn` markers to see Kotlin's normal opt-in checks reject use of the global-state API.
+
 Instead of silently allowing top-level mutation and singleton-backed mutable state, it requires
 those declarations to be marked with `@RequiresGlobalState`. Because that marker is a real Kotlin
 `@RequiresOptIn` annotation, every caller must then acknowledge the dependency explicitly with
@@ -32,7 +115,7 @@ This repository is experimental and pre-1.0.
 - The compiler plugin is K2-only.
 - The current Kotlin compatibility matrix is driven by `supportedKotlinVersions` in [`gradle.properties`](./gradle.properties), currently `2.3.10` and `2.4.0-Beta1`.
 - The Gradle and compiler-plugin builds target JDK 21.
-- The rule is intentionally declaration-shape and declared-type driven, not whole-program mutability analysis.
+- The rule is declaration-shape and declared-type driven, not whole-program mutability analysis.
 
 ## Modules
 
@@ -43,59 +126,9 @@ This repository is experimental and pre-1.0.
 | [`ij-plugin/`](./ij-plugin/) | `:kotlin-no-globals-ij-plugin` | IntelliJ IDEA helper plugin for external compiler-plugin loading |
 | [`gradle-plugin/`](./gradle-plugin/) | `:kotlin-no-globals-gradle-plugin` | Gradle integration for `id("one.wabbit.no-globals")` |
 
-## Quick Start
-
-Assuming normal Gradle usage:
-
-```kotlin
-// settings.gradle.kts
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-}
-```
-
-```kotlin
-// build.gradle.kts
-plugins {
-    kotlin("jvm") version "2.3.10"
-    id("one.wabbit.no-globals") version "<version>"
-}
-
-repositories {
-    mavenCentral()
-}
-```
-
-Then write code normally:
-
-```kotlin
-var counter: Int = 0
-```
-
-The plugin rejects that declaration. To keep it, mark it explicitly:
-
-```kotlin
-import one.wabbit.noglobals.RequiresGlobalState
-
-@RequiresGlobalState
-var counter: Int = 0
-```
-
-And require callers to opt in:
-
-```kotlin
-import one.wabbit.noglobals.RequiresGlobalState
-
-@OptIn(RequiresGlobalState::class)
-fun readCounter(): Int = counter
-```
-
 ## What It Flags
 
-The current rule set is intentionally narrow and predictable.
+The current rule set is narrow and predictable.
 
 Rejected by default:
 
@@ -208,9 +241,13 @@ plugin and annotation artifacts.
 
 ## Documentation Map
 
+- Published API docs: `https://wabbit-corp.github.io/kotlin-no-globals/`
 - [CHANGELOG.md](./CHANGELOG.md): release-oriented history for public versions
 - [docs/rules.md](./docs/rules.md): exact rule semantics, examples, and intentional non-goals
 - [docs/architecture.md](./docs/architecture.md): module relationships, configuration flow, and enforcement model
+- [docs/api-reference.md](./docs/api-reference.md): public API inventory and Dokka generation commands
+- [docs/migration.md](./docs/migration.md): versioning policy, compatibility notes, and upgrade checklist
+- [docs/troubleshooting.md](./docs/troubleshooting.md): common diagnostics, causes, and fixes
 - [docs/development.md](./docs/development.md): local build, testing, versioning, and contribution-oriented notes
 - [library/README.md](./library/README.md): annotation artifact usage
 - [compiler-plugin/README.md](./compiler-plugin/README.md): direct compiler integration and compiler-side behavior

@@ -15,7 +15,7 @@ The repository has three runtime-relevant pieces:
 
 ## Core Enforcement Model
 
-The design deliberately reuses Kotlin’s built-in opt-in machinery instead of reinventing use-site
+The design reuses Kotlin’s built-in opt-in machinery instead of reinventing use-site
 tracking.
 
 `kotlin-no-globals` enforces only one compiler-plugin rule:
@@ -43,10 +43,7 @@ Configuration starts in Gradle and ends inside the FIR checker:
 4. The compiler plugin registrar turns that into `NoGlobalsConfiguration`
 5. The FIR checkers use that configuration during analysis
 
-Important consequence:
-
-- the Gradle plugin is convenience and integration
-- the compiler plugin is the real source of truth for semantics
+The Gradle plugin is convenience and integration; the compiler plugin is the real source of truth for semantics.
 
 ## Why There Are Two Kinds Of Checks
 
@@ -87,7 +84,7 @@ The checker classifies declarations into a small number of meaningful scopes:
 - enum class
 - enum entry
 
-Ordinary class instance state and local declarations are intentionally excluded.
+Ordinary class instance state and local declarations are excluded.
 
 This classification is declaration-context based, not import-string or PSI-text based.
 
@@ -106,7 +103,7 @@ It does **not** currently inspect initializer types to catch disguised storage s
 val users: List<String> = mutableListOf()
 ```
 
-That tradeoff is intentional. The project prefers a smaller, more predictable rule over a broader
+That tradeoff is explicit. The project prefers a smaller, more predictable rule over a broader
 but less comprehensible one.
 
 ## Computed Properties
