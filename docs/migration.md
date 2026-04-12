@@ -20,7 +20,7 @@ plugins {
 }
 ```
 
-2. If you wire the annotation library manually, update it to the same base version:
+2. Update the explicit annotation-library dependency to the same base version:
 
 ```kotlin
 dependencies {

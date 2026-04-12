@@ -49,7 +49,9 @@ Available properties:
 - `enabled`: enables or disables checker registration for the module
 - `blacklistedTypes`: adds fully qualified type names to the mutable-carrier blacklist
 
-The Gradle plugin also adds the annotation library dependency for supported Kotlin targets.
+The Gradle plugin does not add the annotation library automatically. Builds should declare
+`one.wabbit:kotlin-no-globals` explicitly in the configuration whose source code uses
+`@RequiresGlobalState`.
 
 ## Compiler Plugin Options
 

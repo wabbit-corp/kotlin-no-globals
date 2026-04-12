@@ -2,19 +2,6 @@
 
 package one.wabbit.noglobals.idea
 
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.ProjectActivity
+import one.wabbit.ijplugin.common.ConfiguredIdeSupportActivity
 
-class NoGlobalsIdeSupportActivity : ProjectActivity {
-    override suspend fun execute(project: Project) {
-        fun requestRescan() {
-            NoGlobalsIdeSupportCoordinator.enableIfNeeded(
-                project = project,
-                userInitiated = false,
-            )
-        }
-
-        requestRescan()
-        NoGlobalsIdeSupportAutoRescan.install(project, ::requestRescan)
-    }
-}
+class NoGlobalsIdeSupportActivity : ConfiguredIdeSupportActivity(NoGlobalsIdeSupportCoordinator)

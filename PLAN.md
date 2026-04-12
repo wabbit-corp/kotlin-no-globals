@@ -185,8 +185,8 @@
 
 ## Verification
 
-- [x] Run `./gradlew :compiler-plugin:test`.
-- [x] Run `./gradlew :gradle-plugin:test :kotlin-no-globals:compileKotlinJvm`.
+- [x] Run `./gradlew :kotlin-no-globals-plugin:test`.
+- [x] Run `./gradlew :kotlin-no-globals-gradle-plugin:test :kotlin-no-globals:compileKotlinJvm`.
 
 ## Release Readiness
 

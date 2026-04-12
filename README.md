@@ -33,6 +33,10 @@ plugins {
     id("one.wabbit.no-globals") version "0.0.1"
 }
 
+dependencies {
+    implementation("one.wabbit:kotlin-no-globals:0.0.1")
+}
+
 kotlin {
     jvmToolchain(21)
 }
@@ -94,7 +98,7 @@ The stack combines:
 
 - a small published annotation library with `@RequiresGlobalState`
 - a K2 FIR compiler plugin that detects global mutable state
-- a Gradle plugin that wires the compiler plugin and annotation dependency into Kotlin builds
+- a Gradle plugin that wires the compiler plugin into Kotlin builds
 
 ## Why This Exists
 

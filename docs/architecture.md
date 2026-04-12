@@ -11,7 +11,7 @@ The repository has three runtime-relevant pieces:
 | --- | --- | --- |
 | Annotation library | [`library/`](../library/) | Publishes `@RequiresGlobalState` |
 | Compiler plugin | [`compiler-plugin/`](../compiler-plugin/) | Detects global mutable state and reports diagnostics |
-| Gradle plugin | [`gradle-plugin/`](../gradle-plugin/) | Wires the compiler plugin and annotation dependency into Gradle Kotlin compilations |
+| Gradle plugin | [`gradle-plugin/`](../gradle-plugin/) | Wires the compiler plugin into Gradle Kotlin compilations |
 
 ## Core Enforcement Model
 

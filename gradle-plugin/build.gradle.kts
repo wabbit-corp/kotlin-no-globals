@@ -113,6 +113,8 @@ if (localPublishRequested) {
 }
 
 dependencies {
+    implementation("one.wabbit:kotlin-gradle-plugin-common:0.0.1")
+
     compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     testImplementation(gradleApi())

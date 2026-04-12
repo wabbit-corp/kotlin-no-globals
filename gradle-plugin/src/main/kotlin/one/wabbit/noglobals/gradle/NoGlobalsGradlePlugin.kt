@@ -2,6 +2,8 @@
 
 package one.wabbit.noglobals.gradle
 
+import one.wabbit.gradleplugin.common.compilerPluginArtifactVersion
+import one.wabbit.gradleplugin.common.currentKotlinGradlePluginVersion
 import org.gradle.api.Project
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -92,7 +94,7 @@ class NoGlobalsGradlePlugin : KotlinCompilerPluginSupportPlugin {
             version =
                 compilerPluginArtifactVersion(
                     baseVersion = NO_GLOBALS_GRADLE_PLUGIN_VERSION,
-                    kotlinVersion = currentKotlinGradlePluginVersion(),
+                    kotlinVersion = currentKotlinGradlePluginVersion(NoGlobalsGradlePlugin::class.java),
                 ),
         )
 }

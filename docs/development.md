@@ -45,7 +45,7 @@ Use the functional tests when changing:
 
 - plugin application
 - composite build behavior
-- auto-added annotation dependencies
+- explicit annotation dependency wiring
 - multiplatform/native behavior
 
 ### Change the marker annotation

@@ -22,6 +22,32 @@ private const val TEST_PLUGIN_ID: String = "one.wabbit.no-globals"
 
 class CompilerIntegrationTest {
     @Test
+    fun `readme quick start source compiles`() {
+        val result =
+            compileSnippet(
+                source = readMarkedReadmeKotlinBlock("quickstart-source"),
+                includeAnnotationDefinitions = true,
+            )
+
+        assertEquals(ExitCode.OK, result.exitCode, result.renderedMessages())
+    }
+
+    @Test
+    fun `markdown uses actual Gradle project paths`() {
+        val offenders =
+            markdownProjectPathOffenders(
+                forbiddenProjectPaths =
+                    listOf(
+                        ":compiler-plugin",
+                        ":gradle-plugin",
+                        ":ij-plugin",
+                    ),
+            )
+
+        assertEquals(emptyList(), offenders, offenders.joinToString(separator = "\n"))
+    }
+
+    @Test
     fun `top level var requires RequiresGlobalState`() {
         val result =
             compileSnippet(
@@ -1120,6 +1146,47 @@ private fun libraryAnnotationDefinitions(): Map<String, String> {
                 "one/wabbit/noglobals/${path.fileName}" to path.readText()
             }
     }
+}
+
+private fun readMarkedReadmeKotlinBlock(marker: String): String {
+    val markerPattern = Regex.escape(marker)
+    val readme = repositoryRoot().resolve("README.md").readText()
+    val match =
+        Regex(
+            pattern = """<!-- $markerPattern:start -->\s*```kotlin\s*(.*?)\s*```\s*<!-- $markerPattern:end -->""",
+            options = setOf(RegexOption.DOT_MATCHES_ALL),
+        ).find(readme)
+            ?: error("README.md is missing Kotlin block marker '$marker'")
+    return match.groupValues[1].trim() + "\n"
+}
+
+private fun markdownProjectPathOffenders(forbiddenProjectPaths: List<String>): List<String> {
+    val root = repositoryRoot()
+    return Files.walk(root).use { paths ->
+        paths
+            .filter { path -> isRepositoryMarkdown(root, path) }
+            .toList()
+            .flatMap { path ->
+                path.readText().lineSequence().mapIndexedNotNull { index, line ->
+                    forbiddenProjectPaths.firstOrNull { forbidden -> forbidden in line }?.let { forbidden ->
+                        "${root.relativize(path)}:${index + 1}: $forbidden"
+                    }
+                }.toList()
+            }
+    }
+}
+
+private fun isRepositoryMarkdown(
+    root: Path,
+    path: Path,
+): Boolean {
+    if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".md")) {
+        return false
+    }
+    val relative = root.relativize(path).toString()
+    return !relative.startsWith("tmp/") &&
+        !relative.startsWith("build/") &&
+        !relative.startsWith(".gradle/")
 }
 
 private fun repositoryRoot(): Path =
