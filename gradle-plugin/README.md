@@ -20,6 +20,37 @@ Artifact:
 one.wabbit:kotlin-no-globals-gradle-plugin:0.0.1
 ```
 
+## Installation
+
+Add the Gradle plugin in the normal way:
+
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+// build.gradle.kts
+plugins {
+    kotlin("jvm") version "2.3.10"
+    id("one.wabbit.no-globals") version "0.0.1"
+}
+```
+
+For supported Kotlin targets, the plugin adds `one.wabbit:kotlin-no-globals:0.0.1` automatically, so most builds do not need a separate annotation-library dependency line.
+
 ## What It Does
 
 When applied to a Kotlin project, the Gradle plugin:
