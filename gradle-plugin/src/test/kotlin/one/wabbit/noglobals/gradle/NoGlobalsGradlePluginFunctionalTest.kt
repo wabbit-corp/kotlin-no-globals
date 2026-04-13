@@ -104,7 +104,7 @@ class NoGlobalsGradlePluginFunctionalTest {
 
             assertContains(
                 result.output,
-                "Could not find one.wabbit:kotlin-no-globals-plugin:${compilerPluginArtifactVersion(baseVersion = "0.0.1", kotlinVersion = kotlinVersion())}",
+                "Could not find one.wabbit:kotlin-no-globals-plugin:${compilerPluginArtifactVersion(baseVersion = projectVersion(), kotlinVersion = kotlinVersion())}",
             )
         } finally {
             projectDir.toFile().deleteRecursively()
@@ -317,6 +317,13 @@ private fun kotlinVersion(): String =
         .resolve("gradle.properties")
         .readLines()
         .first { line -> line.startsWith("defaultKotlinVersion=") }
+        .substringAfter('=')
+
+private fun projectVersion(): String =
+    repositoryRoot()
+        .resolve("gradle.properties")
+        .readLines()
+        .first { line -> line.startsWith("projectVersion=") }
         .substringAfter('=')
 
 private data class FunctionalNativeTarget(
