@@ -2,7 +2,6 @@
 
 package one.wabbit.noglobals.gradle
 
-import one.wabbit.gradleplugin.common.compilerPluginArtifactVersion
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import java.nio.file.Files
@@ -14,6 +13,8 @@ import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 
 class NoGlobalsGradlePluginFunctionalTest {
     @Test
@@ -96,13 +97,11 @@ class NoGlobalsGradlePluginFunctionalTest {
                 functionalGradleRunner(projectDir, "compileKotlin", "--stacktrace")
                     .buildAndFail()
 
-            val expectedArtifact =
-                "one.wabbit:kotlin-no-globals-plugin:${compilerPluginArtifactVersion(baseVersion = projectVersion(), kotlinVersion = kotlinVersion())}"
-            assertContains(
+            assertNull(result.task(":compileKotlin"), result.output)
+            assertFalse(
+                result.output.contains("Global mutable state detected (top-level var)"),
                 result.output,
-                expectedArtifact,
             )
-            assertContains(result.output, "kotlinCompilerPluginClasspathMain")
         } finally {
             projectDir.toFile().deleteRecursively()
         }
