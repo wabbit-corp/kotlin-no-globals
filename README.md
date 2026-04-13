@@ -30,11 +30,11 @@ rootProject.name = "no-globals-quickstart"
 plugins {
     kotlin("jvm") version "2.3.10"
     application
-    id("one.wabbit.no-globals") version "0.0.1"
+    id("one.wabbit.no-globals") version "0.1.1"
 }
 
 dependencies {
-    implementation("one.wabbit:kotlin-no-globals:0.0.1")
+    implementation("one.wabbit:kotlin-no-globals:0.1.1")
 }
 
 kotlin {

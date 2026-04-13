@@ -26,7 +26,7 @@ one.wabbit:kotlin-no-globals-plugin:<baseVersion>-kotlin-<kotlinVersion>
 Example shape:
 
 ```text
-one.wabbit:kotlin-no-globals-plugin:0.0.1-kotlin-2.3.10
+one.wabbit:kotlin-no-globals-plugin:0.1.1-kotlin-2.3.10
 ```
 
 Use the variant whose Kotlin suffix matches the compiler you are running.

@@ -4,7 +4,7 @@ This project is experimental and pre-1.0. Treat minor-version changes as potenti
 
 Current release baseline:
 
-- project version: `0.0.1`
+- project version: `0.1.1`
 - supported Kotlin lines: `2.3.10`, `2.4.0-Beta1`
 - JVM toolchain for library, compiler plugin, and Gradle plugin: JDK 21
 - rule model: declaration-shape and declared-type driven
@@ -16,7 +16,7 @@ Current release baseline:
 ```kotlin
 plugins {
     kotlin("jvm") version "2.3.10"
-    id("one.wabbit.no-globals") version "0.0.1"
+    id("one.wabbit.no-globals") version "0.1.1"
 }
 ```
 
@@ -24,7 +24,7 @@ plugins {
 
 ```kotlin
 dependencies {
-    implementation("one.wabbit:kotlin-no-globals:0.0.1")
+    implementation("one.wabbit:kotlin-no-globals:0.1.1")
 }
 ```
 

@@ -40,11 +40,11 @@ Most users get this module automatically by applying the Gradle plugin, but manu
 ```kotlin
 plugins {
     kotlin("jvm") version "2.3.10"
-    id("one.wabbit.no-globals") version "0.0.1"
+    id("one.wabbit.no-globals") version "0.1.1"
 }
 
 dependencies {
-    implementation("one.wabbit:kotlin-no-globals:0.0.1")
+    implementation("one.wabbit:kotlin-no-globals:0.1.1")
 }
 ```
 
@@ -74,7 +74,7 @@ plugin, add:
 
 ```kotlin
 dependencies {
-    implementation("one.wabbit:kotlin-no-globals:0.0.1")
+    implementation("one.wabbit:kotlin-no-globals:0.1.1")
 }
 ```
 

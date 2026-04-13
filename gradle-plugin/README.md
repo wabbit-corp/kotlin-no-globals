@@ -17,7 +17,7 @@ one.wabbit.no-globals
 Artifact:
 
 ```text
-one.wabbit:kotlin-no-globals-gradle-plugin:0.0.1
+one.wabbit:kotlin-no-globals-gradle-plugin:0.1.1
 ```
 
 ## Installation
@@ -45,11 +45,11 @@ dependencyResolutionManagement {
 // build.gradle.kts
 plugins {
     kotlin("jvm") version "2.3.10"
-    id("one.wabbit.no-globals") version "0.0.1"
+    id("one.wabbit.no-globals") version "0.1.1"
 }
 ```
 
-For supported Kotlin targets, the plugin adds `one.wabbit:kotlin-no-globals:0.0.1` automatically, so most builds do not need a separate annotation-library dependency line.
+For supported Kotlin targets, the plugin adds `one.wabbit:kotlin-no-globals:0.1.1` automatically, so most builds do not need a separate annotation-library dependency line.
 
 ## What It Does
 
@@ -84,7 +84,7 @@ dependencyResolutionManagement {
 // build.gradle.kts
 plugins {
     kotlin("jvm") version "2.3.10"
-    id("one.wabbit.no-globals") version "0.0.1"
+    id("one.wabbit.no-globals") version "0.1.1"
 }
 ```
 
@@ -99,7 +99,7 @@ noGlobals {
 }
 ```
 
-The plugin adds `one.wabbit:kotlin-no-globals:0.0.1` automatically for supported Kotlin targets, so most builds do not need to declare the annotation dependency separately.
+The plugin adds `one.wabbit:kotlin-no-globals:0.1.1` automatically for supported Kotlin targets, so most builds do not need to declare the annotation dependency separately.
 
 To verify the plugin is active, add a top-level `var` without `@RequiresGlobalState` and run `./gradlew compileKotlin`. The build should fail with the plugin's global-state diagnostic.
 
