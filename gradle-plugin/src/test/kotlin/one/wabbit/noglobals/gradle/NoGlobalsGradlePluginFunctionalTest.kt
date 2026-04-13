@@ -30,9 +30,7 @@ class NoGlobalsGradlePluginFunctionalTest {
             )
 
             val result =
-                GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments("compileKotlin", "--stacktrace")
+                functionalGradleRunner(projectDir, "compileKotlin", "--stacktrace")
                     .buildAndFail()
 
             assertContains(result.output, "Global mutable state detected (top-level var)")
@@ -68,9 +66,7 @@ class NoGlobalsGradlePluginFunctionalTest {
             )
 
             val result =
-                GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments("compileKotlin", "--stacktrace")
+                functionalGradleRunner(projectDir, "compileKotlin", "--stacktrace")
                     .build()
 
             assertEquals(TaskOutcome.SUCCESS, result.task(":compileKotlin")?.outcome)
@@ -97,15 +93,16 @@ class NoGlobalsGradlePluginFunctionalTest {
             )
 
             val result =
-                GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments("compileKotlin", "--stacktrace")
+                functionalGradleRunner(projectDir, "compileKotlin", "--stacktrace")
                     .buildAndFail()
 
+            val expectedArtifact =
+                "one.wabbit:kotlin-no-globals-plugin:${compilerPluginArtifactVersion(baseVersion = projectVersion(), kotlinVersion = kotlinVersion())}"
             assertContains(
                 result.output,
-                "Could not find one.wabbit:kotlin-no-globals-plugin:${compilerPluginArtifactVersion(baseVersion = projectVersion(), kotlinVersion = kotlinVersion())}",
+                expectedArtifact,
             )
+            assertContains(result.output, "kotlinCompilerPluginClasspathMain")
         } finally {
             projectDir.toFile().deleteRecursively()
         }
@@ -146,9 +143,7 @@ class NoGlobalsGradlePluginFunctionalTest {
             )
 
             val result =
-                GradleRunner.create()
-                    .withProjectDir(projectDir.toFile())
-                    .withArguments(nativeTarget.compileTask, "--stacktrace")
+                functionalGradleRunner(projectDir, nativeTarget.compileTask, "--stacktrace")
                     .build()
 
             assertEquals(TaskOutcome.SUCCESS, result.task(":${nativeTarget.compileTask}")?.outcome)
@@ -302,6 +297,17 @@ private fun Path.writeParentAndText(text: String) {
     parent.createDirectories()
     writeText(text)
 }
+
+private fun functionalGradleRunner(projectDir: Path, vararg arguments: String): GradleRunner =
+    GradleRunner.create()
+        .withProjectDir(projectDir.toFile())
+        .withTestKitDir(projectDir.resolve(".gradle-test-kit").toFile())
+        .withArguments(
+            listOf(
+                "--gradle-user-home",
+                projectDir.resolve(".gradle-user-home").invariantSeparatorsPathString,
+            ) + arguments.toList()
+        )
 
 private fun repositoryRoot(): Path =
     generateSequence(Path.of(System.getProperty("user.dir")).toAbsolutePath()) { current -> current.parent }
