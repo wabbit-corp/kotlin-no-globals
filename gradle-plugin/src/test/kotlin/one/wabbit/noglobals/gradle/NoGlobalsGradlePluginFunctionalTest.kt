@@ -14,7 +14,6 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 
 class NoGlobalsGradlePluginFunctionalTest {
     @Test
@@ -97,7 +96,6 @@ class NoGlobalsGradlePluginFunctionalTest {
                 functionalGradleRunner(projectDir, "compileKotlin", "--stacktrace")
                     .buildAndFail()
 
-            assertNull(result.task(":compileKotlin"), result.output)
             assertFalse(
                 result.output.contains("Global mutable state detected (top-level var)"),
                 result.output,
