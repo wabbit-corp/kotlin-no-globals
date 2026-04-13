@@ -2,6 +2,7 @@
 
 package one.wabbit.noglobals.gradle
 
+import one.wabbit.gradleplugin.common.compilerPluginArtifactVersion
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import java.nio.file.Files
@@ -79,10 +80,14 @@ class NoGlobalsGradlePluginFunctionalTest {
     }
 
     @Test
-    fun `pluginManagement includeBuild alone does not substitute library dependency`() {
+    fun `pluginManagement includeBuild alone does not substitute compiler plugin artifacts when published Wabbit artifacts are unavailable`() {
         val projectDir = Files.createTempDirectory("no-globals-gradle-functional-test")
         try {
-            writeFunctionalBuildFiles(projectDir, includeCompositeBuildForDependencies = false)
+            writeFunctionalBuildFiles(
+                projectDir,
+                includeCompositeBuildForDependencies = false,
+                allowPublishedWabbitArtifacts = false,
+            )
             projectDir.resolve("src/main/kotlin/sample/Test.kt").writeParentAndText(
                 """
                 package sample
@@ -97,7 +102,10 @@ class NoGlobalsGradlePluginFunctionalTest {
                     .withArguments("compileKotlin", "--stacktrace")
                     .buildAndFail()
 
-            assertContains(result.output, "Could not find one.wabbit:kotlin-no-globals:0.0.1")
+            assertContains(
+                result.output,
+                "Could not find one.wabbit:kotlin-no-globals-plugin:${compilerPluginArtifactVersion(baseVersion = "0.0.1", kotlinVersion = kotlinVersion())}",
+            )
         } finally {
             projectDir.toFile().deleteRecursively()
         }
@@ -154,6 +162,7 @@ class NoGlobalsGradlePluginFunctionalTest {
 private fun writeFunctionalBuildFiles(
     projectDir: Path,
     includeCompositeBuildForDependencies: Boolean = true,
+    allowPublishedWabbitArtifacts: Boolean = true,
 ) {
     val repositoryRoot = repositoryRoot()
     val dependencyIncludeBuild =
@@ -161,6 +170,48 @@ private fun writeFunctionalBuildFiles(
             """includeBuild("${repositoryRoot.invariantSeparatorsPathString}")"""
         } else {
             ""
+        }
+    val dependencyResolutionRepositories =
+        if (allowPublishedWabbitArtifacts) {
+            """
+            repositories {
+                google()
+                mavenCentral()
+            }
+            """.trimIndent()
+        } else {
+            """
+            repositories {
+                google()
+                mavenCentral {
+                    content {
+                        excludeGroup("one.wabbit")
+                        excludeGroupByRegex("one\\.wabbit\\..+")
+                    }
+                }
+            }
+            """.trimIndent()
+        }
+    val projectRepositories =
+        if (allowPublishedWabbitArtifacts) {
+            """
+            repositories {
+                google()
+                mavenCentral()
+            }
+            """.trimIndent()
+        } else {
+            """
+            repositories {
+                google()
+                mavenCentral {
+                    content {
+                        excludeGroup("one.wabbit")
+                        excludeGroupByRegex("one\\.wabbit\\..+")
+                    }
+                }
+            }
+            """.trimIndent()
         }
     projectDir.resolve("settings.gradle.kts").writeText(
         """
@@ -175,10 +226,7 @@ private fun writeFunctionalBuildFiles(
         }
 
         dependencyResolutionManagement {
-            repositories {
-                google()
-                mavenCentral()
-            }
+            $dependencyResolutionRepositories
         }
 
         $dependencyIncludeBuild
@@ -193,10 +241,7 @@ private fun writeFunctionalBuildFiles(
             id("one.wabbit.no-globals")
         }
 
-        repositories {
-            google()
-            mavenCentral()
-        }
+        $projectRepositories
 
         kotlin {
             jvmToolchain(21)

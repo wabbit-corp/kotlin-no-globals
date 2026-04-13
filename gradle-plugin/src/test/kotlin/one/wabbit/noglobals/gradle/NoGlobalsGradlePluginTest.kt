@@ -2,6 +2,7 @@
 
 package one.wabbit.noglobals.gradle
 
+import one.wabbit.gradleplugin.common.compilerPluginArtifactVersion
 import org.gradle.testfixtures.ProjectBuilder
 import kotlin.test.assertContains
 import kotlin.test.Test
