@@ -10,6 +10,7 @@ Add repo-specific instructions above or below the managed facts block. Keep manu
 - Canonical repo target: `kotlin-no-globals`. Useful entrypoints: `dev project show kotlin-no-globals`, `dev build kotlin-no-globals`, `dev check kotlin-no-globals`.
 - Setup-managed files are regenerated with `dev setup kotlin-no-globals`; avoid hand-editing stamped generated files.
 - Sanctioned override files in this repo: `build.extra.gradle.kts`, `settings.local.gradle.kts`.
+- Review `kotlin-conventions.md` before editing Kotlin code in this repo.
 - Configured project types: `kotlin/jvm`, `kotlin/kmp`. Docs: `dokka`.
 - Repo reference docs: `CHANGELOG.md`, `PLAN.md`.
 <!-- END app-wabbit-dev managed facts -->
