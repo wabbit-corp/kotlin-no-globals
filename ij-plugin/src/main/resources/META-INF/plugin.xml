@@ -4,7 +4,19 @@
     <version>0.1.1</version>
     <vendor email="wabbit@wabbit.one" url="https://wabbit.one">Wabbit Consulting Corporation</vendor>
     <description>Enables IntelliJ-side support for one.wabbit kotlin-no-globals projects by allowing the Kotlin IDE plugin to load the external compiler plugin registrar from imported compiler arguments.</description>
-    <change-notes>0.1.1: fixes the Gradle-plugin release validation path and keeps IDE support aligned with the published helper/runtime setup.</change-notes>
+    <change-notes>Patch release for the 0.1 line.
+
+Included in this release:
+
+- kotlin-no-globals
+- kotlin-no-globals-gradle-plugin
+- kotlin-no-globals-plugin
+
+Highlights:
+
+- fixes the composite-build Gradle-plugin validation path used by release/docs CI
+- aligns the IntelliJ support module with the Java 21 / IntelliJ 2025.3 helper baseline
+- refreshes pinned documentation examples to the current published version</change-notes>
     <extensions defaultExtensionNs="com.intellij">
         <backgroundPostStartupActivity implementation="one.wabbit.noglobals.idea.NoGlobalsIdeSupportActivity" />
         <notificationGroup id="NoGlobalsIdeSupport" displayType="BALLOON" />
